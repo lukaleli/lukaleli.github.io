@@ -1,0 +1,797 @@
+--- ---
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- (1) Optimize for mobile versions: http://goo.gl/EOpFl -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- (1) force latest IE rendering engine: bit.ly/1c8EiC9 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>TUTORIAL: Create your own Slackbot for fun and profit</title>
+  <meta name="description" content="I work at Wertewandel - a startup where we build a bonus programme for sustainable products. Recently our backend developer exposed an API endpoint for retrieving a number of customers that already..." />
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@lukaleli" />
+    <meta name="twitter:title" content="TUTORIAL: Create your own Slackbot for fun and profit" />
+    <meta name="twitter:image" content="http://programmersbyproducts.com/assets/images/logo.png" />
+    
+    <meta name="twitter:description"  content="I work at Wertewandel - a startup where we build a bonus programme for sustainable products. Recently our backend developer exposed an API endpoint for retrieving a number of customers that already..." />
+    
+  
+  
+  <meta property="og:site_name" content="PROGRAMMER'S BY-PRODUCTS" />
+  <meta property="og:title" content="TUTORIAL: Create your own Slackbot for fun and profit"/>
+  
+  <meta property="og:description" content="I work at Wertewandel - a startup where we build a bonus programme for sustainable products. Recently our backend developer exposed an API endpoint for retrieving a number of customers that already..." />
+  
+  <meta property="og:image" content="http://programmersbyproducts.com/assets/article_images/2017-05-29-slackbot/slackbot-cover-dark.jpg" />
+  <meta property="og:url" content="http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html" >
+  <meta property="og:type" content="blog" />
+  <meta property="article:published_time" content="2017-05-29T16:34:25+02:00">
+
+  <link rel="canonical" href="http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html"/>
+  <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/png"/>
+  <link rel="stylesheet" href="//brick.a.ssl.fastly.net/Linux+Libertine:400,400i,700,700i/Open+Sans:400,400i,700,700i">
+  <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" type="text/css" media="screen" href="/css/main.css" />
+  <link rel="stylesheet" type="text/css" media="print" href="/css/print.css" />
+</head>
+
+
+<body itemscope itemtype="http://schema.org/Article">
+  <!-- header start -->
+
+
+  <a href="http://programmersbyproducts.com" class="logo-readium"><span class="logo" style="background-image: url(/assets/images/logo.png)"></span></a>
+
+<!-- header end -->
+
+  <main class="content" role="main">
+    <article class="post">
+      
+      <div class="article-image">
+        <div class="post-image-image" style="background-image: url(/assets/article_images/2017-05-29-slackbot/slackbot-cover-dark.jpg)">
+          Article Image
+        </div>
+        <div class="post-image-image2" style="background-image: url()">
+          Article Image
+        </div>
+        <div class="post-meta">
+          <h1 class="post-title">TUTORIAL: Create your own Slackbot for fun and profit</h1>
+          <div class="cf post-meta-text">
+            <div class="author-image" style="background-image: url(/assets/images/author.jpg)">Blog Logo</div>
+            <h4 class="author-name" itemprop="author" itemscope itemtype="http://schema.org/Person">Lukasz Lelinski</h4>
+            on
+            <time datetime=" 2017-05-29 16:34 ">29 May 2017</time>
+            <!-- , tagged on <span class="post-tag-">, <a href="/tag/"></a></span> -->
+          </div>
+          <div style="text-align:center">
+            <a href="#topofpage" class="topofpage"><i class="fa fa-angle-down"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <section class="post-content">
+        <div class="post-reading">
+          <span class="post-reading-time"></span> read
+        </div>
+        <a name="topofpage"></a> <p>I work at <a href="https://www.wertewandel.de/">Wertewandel</a> - a startup where we build a bonus programme for sustainable products. Recently our backend developer exposed an API endpoint for retrieving a number of customers that already signed up for our programme. I thought this is a great opportunity to create a simple Slackbot as Slack is our tool of choice for communication purposes.</p>
+
+<hr />
+
+<h2 id="requirements">Requirements</h2>
+
+<ol>
+  <li>We want to be notified about the current number of customers on workdays during our working hours, e.g. from Monday to Friday at 12 a.m.</li>
+  <li>If someone’s too impatient to wait for official Slackbot announcement one can ask bot directly via Direct Message on Slack</li>
+</ol>
+
+<p>That should be sufficient to get started. </p>
+
+<p><em>This tutorial is pretty basic and I’ll try to explain as much code as possible.</em></p>
+
+<hr />
+
+<h2 id="code">Code</h2>
+
+<p>I’m gonna use <a href="https://nodejs.org/en/">Node</a> and Javascript to write our Slackbot. </p>
+
+<p>First we need to create a directory for our project and initialize it via <code>npm</code> to manage our dependencies. I assume you have Node installed in your system (I use v7.7.3 to use some of ES6 syntax goodies).</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">mkdir slackbot
+<span class="nb">cd </span>slackbot
+touch app.js
+npm init -y</code></pre></div>
+
+<p>Great! We have a basic directory structure to start writing the code.</p>
+
+<hr />
+
+<h3 id="talking-with-slack">Talking with Slack</h3>
+
+<p>Slack has a Real Time Messaging API to send messages back and forth to Slack via websockets. You can find a detailed documentation <a href="https://api.slack.com/rtm">here</a>. We could, of course, use that documentation to connect our app to the Slack’s API and do everything by hand, but we, programmers, are lazy by nature and if we can take some shortcuts we are usually happy to do so. We’re gonna use a third party library that serves as a convenient wrapper around RTM Slack API and exposes methods to easily connect to the Slack API and operate on it. I’ve searched through Github and decided to use <a href="https://github.com/mishk0/slack-bot-api">Slackbots.js</a> library.</p>
+
+<p>Let’s install it and save as a project’s dependency</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm i -S slackbots</code></pre></div>
+
+<p>But before we start writing actual code let’s take a look at the Slackbots.js library documentation.
+ <a href="https://github.com/mishk0/slack-bot-api#usage">Usage section</a> shows how to create SlackBot instance. </p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">);</span>
+
+<span class="c1">// create a bot</span>
+<span class="kd">var</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="s1">&#39;xoxb-012345678-ABC1DFG2HIJ3&#39;</span><span class="p">,</span> <span class="c1">// Add a bot https://my.slack.com/services/new/bot and put the token </span>
+    <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;My Bot&#39;</span>
+<span class="p">});</span></code></pre></div>
+
+<p>To gain access to our team’s Slack we need to generate access token by visiting <a href="https://my.slack.com/services/new/bot">https://my.slack.com/services/new/bot</a>. </p>
+
+<p>You’ll see a screen to create a new bot integration</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/slack-api-screenshot.png" alt="" /></p>
+
+<p>Choose a name for your bot and click <strong>Add bot integration</strong> button which will redirect you to the page with generated token. That’s all what we need. Copy the token string and save it somewhere in the secure place. We don’t want anybody to have access to our Slack team and listen to our super secret product strategies 😉</p>
+
+<p>Now let’s open our <strong>app.js</strong> file and initialize Slackbot with two parameters: our access token and slackbot’s name (it doesn’t have to be the same name that you specified in the bot integration panel).</p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span></code></pre></div>
+
+<p>I’ve declared two constants <code>TOKEN</code> and <code>BOT_NAME</code> for clarity. As you can see <code>TOKEN</code> constant has assigned value residing in the Node environmental variable called <code>BOT_API_TOKEN</code>. Why is that? Simply put: it’s a good practice to inject secret values to our applications via env variables rather than keeping them in version control system like Git. Having that you can securely keep your code in a public repository without worrying that someone can use your credentials for some nasty purposes. </p>
+
+<p>For safety sake we can even throw an error in case you forgot to specify it when starting a Node process.</p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span></code></pre></div>
+
+<p>Now let’s test out if we can successfully send a message to one of our Slack channels.</p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+<span class="kr">const</span> <span class="nx">CHANNEL</span> <span class="o">=</span> <span class="s1">&#39;general&#39;</span>
+<span class="kr">const</span> <span class="nx">PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">icon_emoji</span><span class="o">:</span> <span class="s1">&#39;&lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;It\&#39;s alive!!!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+<span class="p">})</span></code></pre></div>
+
+<p>Let’s stop here for a moment and see what happens in the code. We’ve added new constant variables: <code>CHANNEL</code> and <code>PARAMS</code>. <code>CHANNEL</code> is simply a name of the channel you want to post your message to. <code>PARAMS</code> is the parameters object you can pass to <code>postMessageToChannel</code> method to specify e.g. emoji that’s gonna be used as an avatar for our Slackbot.
+Now switch to the terminal and type</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ BOT_API_TOKEN</span><span class="o">=</span>&lt;YOUR_SECRET_TOKEN&gt; node app.js</code></pre></div>
+
+<p>in your project’s directory. </p>
+
+<p><strong>Don’t forget to replace <code>&lt;YOUR_SECRET_TOKEN&gt;</code> with your secret token!</strong></p>
+
+<p>If you followed the instructions carefully you should receive <strong>It’s alive!!!</strong> message with ❤️ as an avatar at your team’s <em>#general</em> Slack channel. Hurray!</p>
+
+<p>Our bot is still listening for the messages from the Slack API and the node process is still running. We can terminate it by pressing <code>Ctrl + C</code> in the terminal.</p>
+
+<hr />
+
+<h3 id="showing-real-data">Showing real data</h3>
+
+<p>By now we do know how to send a message, but it’s not really useful. Let’s try to get a customers number from the endpoint I’ve mentioned at the beginning of this post. Before we write the code we can check if it works correctly and returns a value. I’m gonna make a <strong>GET</strong> request with cURL in the terminal to test our endpoint.</p>
+
+<p><em>NOTE: To be precise: I’m not using cURL, but <a href="https://httpie.org/">HTTPie</a> which is a nice utility tool that provides more user-friendly commands to make HTTP requests than cURL itself. I always forget how to make more complex requests with cURL and HTTPie helps a lot :)</em></p>
+
+<p><em>NOTE 2: I’m using a random number generator API instead of my company API endpoint. Numbers are not real, but are still numbers that we can use for the sake of this tutorial :)</em></p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">http -v <span class="s1">&#39;https://www.random.org/integers/?num=1&amp;min=1&amp;max=500&amp;col=1&amp;base=10&amp;format=plain&amp;rnd=new&#39;</span>
+GET /integers/?num<span class="o">=</span>1<span class="p">&amp;</span><span class="nv">min</span><span class="o">=</span>1<span class="p">&amp;</span><span class="nv">max</span><span class="o">=</span>500<span class="p">&amp;</span><span class="nv">col</span><span class="o">=</span>1<span class="p">&amp;</span><span class="nv">base</span><span class="o">=</span>10<span class="p">&amp;</span><span class="nv">format</span><span class="o">=</span>plain<span class="p">&amp;</span><span class="nv">rnd</span><span class="o">=</span>new HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Host: www.random.org
+User-Agent: HTTPie/0.9.8
+
+
+
+HTTP/1.1 <span class="m">200</span> OK
+Access-Control-Allow-Origin: *
+CF-RAY: 3656d75d9e2f2af7-WAW
+Cache-Control: no-store, no-cache, must-revalidate, post-check<span class="o">=</span>0, pre-check<span class="o">=</span>0
+Connection: keep-alive
+Content-Encoding: gzip
+Content-Length: 24
+Content-Type: text/plain<span class="p">;</span><span class="nv">charset</span><span class="o">=</span>utf-8
+Date: Sat, <span class="m">27</span> May <span class="m">2017</span> 06:15:43 GMT
+Expires: Thu, <span class="m">19</span> Nov <span class="m">1981</span> 08:52:00 GMT
+Pragma: no-cache
+RDO-Authenticated-Login: -
+Server: cloudflare-nginx
+Set-Cookie: <span class="nv">__cfduid</span><span class="o">=</span>d778c33106e2ea51e6d91a114cb7d7ae71495865743<span class="p">;</span> <span class="nv">expires</span><span class="o">=</span>Sun, 27-May-18 06:15:43 GMT<span class="p">;</span> <span class="nv">path</span><span class="o">=</span>/<span class="p">;</span> <span class="nv">domain</span><span class="o">=</span>.random.org<span class="p">;</span> HttpOnly
+Set-Cookie: <span class="nv">RDOSESSION</span><span class="o">=</span>0v32nd8kg0jme2hho5t0boeg56<span class="p">;</span> <span class="nv">path</span><span class="o">=</span>/<span class="p">;</span> <span class="nv">domain</span><span class="o">=</span>.random.org
+Vary: Accept-Encoding
+X-Powered-By: PHP/5.4.45-0+deb7u8
+
+280</code></pre></div>
+
+<p>Looks like we already have 280 customers and that means the endpoint is working correctly. Let’s try to fetch that number in our application. I’ll use <a href="https://github.com/bitinn/node-fetch">node-fetch</a> module that implements <code>window.fetch</code> method compatible with its browser’s counterpart. If you’re not familiar with the fetch API I suggest you read <a href="https://davidwalsh.name/fetch">David’s Walsh great introduction post</a> first. We will implement that functionality as a separate module named <strong>fetcher.js</strong>.</p>
+
+<p><strong>fetcher.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">fetch</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node-fetch&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">TRACKER_URL</span> <span class="o">=</span> <span class="s1">&#39;https://www.random.org/integers/?num=1&amp;min=1&amp;max=500&amp;col=1&amp;base=10&amp;format=plain&amp;rnd=new&#39;</span>
+
+<span class="kr">const</span> <span class="nx">fetchCount</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">fetch</span><span class="p">(</span><span class="nx">TRACKER_URL</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">response</span> <span class="o">=&gt;</span> <span class="nx">response</span><span class="p">.</span><span class="nx">text</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">response</span> <span class="o">=&gt;</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">response</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">fetchCount</span></code></pre></div>
+
+<p>Our <strong>fetcher.js</strong> module exports <code>fetchCount</code> method that returns promise. But before passing the result further into promise chain our method runs two transformations on the fetched data: </p>
+
+<ul>
+  <li>
+    <p><code>text()</code> method (which returns promise) on the <code>Response</code> object to convert response body to the plain text (if we would expect our response to be in the JSON format we would use <code>json()</code> method instead),</p>
+  </li>
+  <li>
+    <p><code>parseInt</code> to convert our string to the integer.</p>
+  </li>
+</ul>
+
+<p>Now let’s try to use our module to fetch data from the server and send to our Slack channel.</p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">fetchCount</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./fetcher&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+<span class="kr">const</span> <span class="nx">CHANNEL</span> <span class="o">=</span> <span class="s1">&#39;general&#39;</span>
+<span class="kr">const</span> <span class="nx">PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">icon_emoji</span><span class="o">:</span> <span class="s1">&#39;&lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">fetchCount</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Yupi! We have &#39;</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s1">&#39; customers!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Houston, we have a problem with customers tracker!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+<span class="p">})</span></code></pre></div>
+
+<p>We basically wait for <code>fetchCount</code> promise until it’s resolved and then we use passed customers number value to create Slack message and send it. Sometimes an error can occur that’s why we also add <code>catch</code> at the end to catch any unexpected errors and notify users on Slack that something went wrong.</p>
+
+<hr />
+
+<h3 id="scheduling-the-task">Scheduling the task</h3>
+
+<p>Now we need to take care of sending messages at a scheduled time- in our case on Mon-Fri at 12 a.m. The first thing that comes to my mind when I think about scheduling is <strong>cron</strong>. Quick search for <em>“node cron”</em> phrase on Google shows a <a href="https://github.com/kelektiv/node-cron">github.com/kelektiv/node-cron</a> which we will use for our project. <strong>Cron</strong> tool uses special pattern passed as a string to reflect times at which specified task will be run. You can read more about these configuration patterns <a href="http://crontab.org/">here</a>. I’ve prepared a following pattern</p>
+
+<p><code>00 00 12 * * 1-5</code></p>
+
+<p>which, in cron’s language, means <em>“run task at 12 every day from Monday till Friday”</em> as required. After a short glance at <em>node-cron</em> documentation we’re ready to add a task to our application.</p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">CronJob</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">).</span><span class="nx">CronJob</span>
+<span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">fetchCount</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./fetcher&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+<span class="kr">const</span> <span class="nx">CHANNEL</span> <span class="o">=</span> <span class="s1">&#39;general&#39;</span>
+<span class="kr">const</span> <span class="nx">PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">icon_emoji</span><span class="o">:</span> <span class="s1">&#39;&lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;</span>
+<span class="p">}</span>
+<span class="kr">const</span> <span class="nx">CRON_PATTERN</span> <span class="o">=</span> <span class="s1">&#39;00 00 12 * * 1-5&#39;</span>
+<span class="kr">const</span> <span class="nx">TIME_ZONE</span> <span class="o">=</span> <span class="s1">&#39;Europe/Berlin&#39;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">fetchCount</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Yupi! We have &#39;</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s1">&#39; customers!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Houston, we have a problem with customers tracker!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">onCronError</span> <span class="o">=</span> <span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Cron job stopped&#39;</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+	<span class="k">new</span> <span class="nx">CronJob</span><span class="p">(</span><span class="nx">CRON_PATTERN</span><span class="p">,</span> <span class="nx">task</span><span class="p">,</span> <span class="nx">onCronError</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">TIME_ZONE</span><span class="p">)</span>
+<span class="p">})</span></code></pre></div>
+
+<p>I’ve refactored <code>app.js</code> code a bit and added a cron job. Please note that I’ve used Berlin’s timezone to which cron will refer when running it’s jobs. Please change it according to your time zone.</p>
+
+<p>We’re almost there, but there’s still a second requirement we didn’t cover: our slackbot needs to respond to direct messages. To do that I needed to dig a bit deeper into documentation to filter out all the incoming data that’s not relevant to us, because when we listen for <code>message</code> event we will be notified on almost every event happening on our team’s Slack. </p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">CronJob</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">).</span><span class="nx">CronJob</span>
+<span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">fetchCount</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./fetcher&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Slackbot&#39;</span>
+<span class="kr">const</span> <span class="nx">CHANNEL</span> <span class="o">=</span> <span class="s1">&#39;general&#39;</span>
+<span class="kr">const</span> <span class="nx">PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">icon_emoji</span><span class="o">:</span> <span class="s1">&#39;&lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;</span>
+<span class="p">}</span>
+<span class="kr">const</span> <span class="nx">CRON_PATTERN</span> <span class="o">=</span> <span class="s1">&#39;00 00 12 * * 1-5&#39;</span>
+<span class="kr">const</span> <span class="nx">TIME_ZONE</span> <span class="o">=</span> <span class="s1">&#39;Europe/Berlin&#39;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+    <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">fetchCount</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Yupi! We have &#39;</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s1">&#39; customers!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span><span class="nx">CHANNEL</span><span class="p">,</span> <span class="s1">&#39;Houston, we have a problem with customers tracker!&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">onCronError</span> <span class="o">=</span> <span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Cron job stopped&#39;</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">onDirectMessage</span> <span class="o">=</span> <span class="nx">channel</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">fetchCount</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessage</span><span class="p">(</span><span class="nx">channel</span><span class="p">,</span> <span class="s1">&#39;Oh,geez! You&#39;</span><span class="nx">re</span> <span class="nx">so</span> <span class="nx">impatient</span><span class="o">!</span> <span class="nx">We</span> <span class="nx">have</span> <span class="o">*</span><span class="s1">&#39; + count + &#39;</span> <span class="nx">customers</span><span class="o">*</span><span class="p">.</span> <span class="nx">Happy</span> <span class="nx">now</span><span class="o">?</span> <span class="nx">Bye</span> <span class="nx">bye</span><span class="p">.</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="kr">class</span><span class="o">=</span><span class="s1">&#39;emoji&#39;</span> <span class="nx">title</span><span class="o">=</span><span class="s1">&#39;:angry:&#39;</span> <span class="nx">alt</span><span class="o">=</span><span class="s1">&#39;:angry:&#39;</span> <span class="nx">src</span><span class="o">=</span><span class="s1">&#39;https://assets.github.com/images/icons/emoji/unicode/1f620.png&#39;</span> <span class="nx">height</span><span class="o">=</span><span class="s1">&#39;20&#39;</span> <span class="nx">width</span><span class="o">=</span><span class="s1">&#39;20&#39;</span> <span class="nx">align</span><span class="o">=</span><span class="s1">&#39;absmiddle&#39;</span> <span class="o">/&gt;</span><span class="s1">&#39;, PARAMS)</span>
+<span class="s1">        })</span>
+<span class="s1">        .catch(error =&gt; {</span>
+<span class="s1">            bot.postMessage(channel, &#39;</span><span class="nx">Something</span> <span class="nx">is</span> <span class="nx">not</span> <span class="nx">working</span> <span class="nx">properly</span><span class="p">.</span> <span class="nx">I</span> <span class="nx">couldn</span><span class="s1">&#39;t get a customers number.&#39;</span><span class="p">,</span> <span class="nx">PARAMS</span><span class="p">)</span>
+        <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">new</span> <span class="nx">CronJob</span><span class="p">(</span><span class="nx">CRON_PATTERN</span><span class="p">,</span> <span class="nx">task</span><span class="p">,</span> <span class="nx">onCronError</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">TIME_ZONE</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">data</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;message&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">bot_id</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">bot</span><span class="p">.</span><span class="nx">openIm</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">user</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">im</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">im</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">channel</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">onDirectMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">channel</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+<span class="p">})</span></code></pre></div>
+
+<p>Our feature to handle direct messages is a bit stupid now because it will respond with customers number to any random string you send to him. It would be great if our bot could respond meaningfully to our questions. But I’ll leave these improvements for you as a homework 🙂</p>
+
+<p>I hope you’ve tested the code and confirmed that it works on your local machine. Of course this is not how we’re gonna leave it. In the next section I’ll show you how to deploy your application to the server. For free. 🙌</p>
+
+<hr />
+
+<h3 id="make-it-alive">Make it alive</h3>
+
+<p>There are tons of cloud options to deploy your app to, but I want to make it as painless as possible and, first of all, free. I’ve chosen <a href="https://www.heroku.com/">Heroku</a> for that purpose as a wide-known, developer-friendly and, to some point, free application hosting service.</p>
+
+<p>But before we configure Heroku I want you to create a repository on your Github account to keep Slackbot code in it. Aside from being a good practice to version control your code we’ll use it for an easy deployment to Heroku.</p>
+
+<p>When you have your Github repository all set let’s go back to the Heroku dashboard and click <strong>New</strong> -&gt; <strong>Create new app</strong> button under <strong>Personal apps</strong> section</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_1.png" alt="" /></p>
+
+<p>In <strong>Create New App</strong> section provide unique name for your app or just leave it blank and let Heroku do that for you by generating a random string. You can also choose datacenter location: either Europe or United States. Choose the one that’s closer to your location to save some time on the packets delivery 😉</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_2.png" alt="" /></p>
+
+<p>After you create the app go to the <strong>Deploy</strong> bookmark.</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_3.png" alt="" /></p>
+
+<p>Click the <strong>Github</strong> button in the <strong>Deployment method</strong> section, authorize Heroku app on your Github account and then type the name of your repo that you created for your Slackbot app. Then click the <strong>Search</strong> button and your repository should be listed below. Click <strong>Connect</strong>. </p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_5.png" alt="" /></p>
+
+<p>After your repository connected successfully scroll down to the <strong>Automatic deploys</strong> section and click <strong>Enable Automatic Deploys</strong> button. Right now whenever you commit new changes to your Slackbot’s repository the app will be redeployed with your changes. Neat, huh? </p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_6.png" alt="" /></p>
+
+<p>Now switch to the <strong>Settings</strong> bookmark and click <strong>Reveal Config Vars</strong>.</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_7.png" alt="" /></p>
+
+<p>Do you remember our environmental variable <code>BOT_API_TOKEN</code>? This is the place where we can set any env variable so we don’t have to set it manually when starting our app.</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_8.png" alt="" /></p>
+
+<p>Now go back to your terminal, <code>cd</code> you project’s directory and execute a following command</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">echo</span> <span class="s2">&quot;worker: node app.js&quot;</span> &gt; Procfile</code></pre></div>
+
+<p>This command will create <em>Procfile</em> file that specifies the type of the app we’re deploying and a command to start the app. <em>Procfile</em> is a Heroku specific configuration file. </p>
+
+<p>When you’ve done that commit changes and push to your repository.</p>
+
+<p>That should trigger deployment process on Heroku which you can observe in <strong>Activity</strong> tab. After deployment is finished go to the <strong>Resources</strong> tab, turn off <em>web</em> dyno type and turn on <em>worker</em> (you can do this by clicking pencil button and toggling the switch button). You should have it configured as in the picture below.</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_9.png" alt="" /></p>
+
+<p>The difference between <em>web</em> and <em>worker</em> process type is that <em>web</em> simply runs a web server that exposes our application to the outside world with UI and <em>worker</em> is simply a Node process that doesn’t need to serve anything to the end user.</p>
+
+<p>Now go back to <strong>Deploy</strong> bookmark, scroll down to the very bottom and click <strong>Deploy branch</strong> with <em>master</em> branch chosen. That will cause redeploy with updated dyno configuration.</p>
+
+<p>You can check server logs (<strong>More</strong> -&gt; <strong>View logs</strong>) to see if everything went fine and our app didn’t crash. </p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_10.png" alt="" /></p>
+
+<p><strong>Note:</strong> I like to add various <code>console.log</code> statements in the code to see if my services initialized successfully (e.g. on bot start event) and <code>console.error</code> when something has failed. You should do the same to easily track problems with your code on production.</p>
+
+<p>If there’s no suspicious messages in the logs and you can see <strong>Build succeeded</strong> green message in the <strong>Activity</strong> tab on your latest deployment</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/step_11.png" alt="" /></p>
+
+<p>and when you send a direct message to your Slackbot in your Slack app and you see this in the response</p>
+
+<p><img src="/assets/article_images/2017-05-29-slackbot/slack_msg.png" alt="" /></p>
+
+<p>then <strong>congrats</strong>!!! You’ve just created your first Slackbot!</p>
+
+<hr />
+
+<h3 id="make-it-fun">Make it fun</h3>
+
+<p>Our app is super helpful in informing our team about how we’re doing. But these messages are boring, always the same. What if we could enhance our code to randomize the messages and do a bit of motivational speeches like american army officers do? 😉 </p>
+
+<p>Let’s create another module called <strong>messages.js</strong> that will take the current number of customers, compare it with previous one and based on that return an appropriate message (either harsh and motivational or with congrats and love).</p>
+
+<p><strong>messages.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">random</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="k">this</span><span class="p">.</span><span class="nx">length</span><span class="p">)]</span>
+<span class="p">}</span>
+
+<span class="nb">String</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">format</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(...</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/{(\d+)}/g</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">match</span><span class="p">,</span> <span class="nx">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">typeof</span> <span class="nx">args</span><span class="p">[</span><span class="nx">number</span><span class="p">]</span> <span class="o">!==</span> <span class="s1">&#39;undefined&#39;</span> <span class="o">?</span> <span class="nx">args</span><span class="p">[</span><span class="nx">number</span><span class="p">]</span> <span class="o">:</span> <span class="nx">match</span>
+  <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">sameCountMessages</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s2">&quot;Hello, fellows! Looks like we don&#39;t work too hard because we still have only *{0} customers*! Nothing&#39;s changed from the last time! Chop, chop! Work harder! &lt;img class=&#39;emoji&#39; title=&#39;:v:&#39; alt=&#39;:v:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/270c.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Goddammit! We still have only *{0} customers*. I promise you, I&#39;m gonna stick this pace stick through your ears and ride you round this parade square like a shagging motorbike! Get to work!! &lt;img class=&#39;emoji&#39; title=&#39;:angry:&#39; alt=&#39;:angry:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f620.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+  <span class="s1">&#39;Guys, did u ever pick up your teeth with broken fingers? You will learn soon. *{0} bloody customers*&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;Hi, guys... I feel like I am the only one doing the real work here... We have only *{0} people* onboard!!! Come on! I believe that you can do better! :rick:&#39;</span><span class="p">,</span>
+  <span class="s2">&quot;What&#39;s wrong with you guys?! Still *{0} customers*? No progress? I’m going to rip your arm off and slap you with the soggy end if there&#39;s no improvement soon!&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Hey guys! Who&#39;s the master? Huh? Who&#39;s the master? Certainly not we! Only *{0} customers*? We certainly can do better! Up up up! Get to work!&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Only *{0} customers*... I&#39;m going to hurt you, guys, *alot*, and *slowly*...&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;This is the last time I&#39;m coming here and there&#39;s no improvement! We have poor number of *{0} customers*... It&#39;s laughable! I&#39;m gonna make you my sex slaves next time if this doesn&#39;t change! Bye!&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kr">const</span> <span class="nx">decreasedCountMessages</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s1">&#39;WTF PEOPLE?! *{0} customers*??!! Even my mother can do better!! NOT SAYING BYE THIS TIME! &lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">point_up</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">point_up</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/261d.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;,</span>
+  <span class="s1">&#39;Guys, seriously! I am going to skin you and use it as a fckng wet suit this weekend. Customers are leaving us! Only *{0}* left! Aaaaaaah!&#39;</span><span class="p">,</span>
+  <span class="s2">&quot;:middle_finger: We&#39;re losing them!!! Only *{0}* left!!! Aaaarrggghhhhhh, I need to get a drink... :middle_finger: :middle_finger: :middle_finger:&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Noooooooo! That&#39;s it! I&#39;m done! Fuck it fuck it fuck it! Only *{0} customers* left. It means that tomorrow we can all go home! &lt;img class=&#39;emoji&#39; title=&#39;:rage:&#39; alt=&#39;:rage:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f621.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kr">const</span> <span class="nx">increasedCountMessages</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s1">&#39;Hello! I want to proudly announce that we are badass! *{0} customers* and counting! Love you guys, keep up the good work! &lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">kiss</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">kiss</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/1f48b.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;,</span>
+  <span class="s2">&quot;&lt;img class=&#39;emoji&#39; title=&#39;:raised_hands:&#39; alt=&#39;:raised_hands:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f64c.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt; Getting down on my knees... You&#39;re awesome guys! We&#39;ve reached *{0} customers*! Tequilla shots on me! Keep it up- don&#39;t you ever stop! &lt;img class=&#39;emoji&#39; title=&#39;:pray:&#39; alt=&#39;:pray:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f64f.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;What a beeeeeeeaaaaaauuuuuutiiiiiiifuuuuuuul day! We reached enormous number of *{0} customers* in our garden, which means we&#39;re getting there! Love you guys! &lt;img class=&#39;emoji&#39; title=&#39;:heart:&#39; alt=&#39;:heart:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Uh la la! Who&#39;s the master? Huh? Who&#39;s the master? We are! Next customers arriving slowly but steady! *{0} people* on board! Yupiii! &lt;img class=&#39;emoji&#39; title=&#39;:muscle:&#39; alt=&#39;:muscle:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f4aa.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kr">const</span> <span class="nx">messages</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span> <span class="nx">cond</span><span class="o">:</span> <span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">prev</span> <span class="o">&lt;</span> <span class="nx">current</span><span class="p">,</span> <span class="nx">msg</span><span class="o">:</span> <span class="nx">increasedCountMessages</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="nx">cond</span><span class="o">:</span> <span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">prev</span> <span class="o">&gt;</span> <span class="nx">current</span><span class="p">,</span> <span class="nx">msg</span><span class="o">:</span> <span class="nx">decreasedCountMessages</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="nx">cond</span><span class="o">:</span> <span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">prev</span> <span class="o">===</span> <span class="nx">current</span><span class="p">,</span> <span class="nx">msg</span><span class="o">:</span> <span class="nx">sameCountMessages</span> <span class="p">},</span>
+<span class="p">]</span>
+
+<span class="kr">const</span> <span class="nx">getMessage</span> <span class="o">=</span> <span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">current</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kr">const</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">messages</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">messages</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">cond</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span> <span class="nx">current</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">messages</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">msg</span><span class="p">.</span><span class="nx">random</span><span class="p">().</span><span class="nx">format</span><span class="p">(</span><span class="nx">current</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">getMessage</span></code></pre></div>
+
+<p>And in our <strong>app.js</strong></p>
+
+<p><strong>app.js</strong></p>
+
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">SlackBot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;slackbots&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">CronJob</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cron&#39;</span><span class="p">).</span><span class="nx">CronJob</span>
+<span class="kr">const</span> <span class="nx">fetchCount</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./fetcher&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">getMessage</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./messages&#39;</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">TOKEN</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">BOT_API_TOKEN</span>
+<span class="kr">const</span> <span class="nx">BOT_NAME</span> <span class="o">=</span> <span class="s1">&#39;Funny Slackbot&#39;</span>
+<span class="kr">const</span> <span class="nx">CHANNEL</span> <span class="o">=</span> <span class="s1">&#39;general&#39;</span>
+<span class="kr">const</span> <span class="nx">PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">icon_emoji</span><span class="o">:</span> <span class="s1">&#39;&lt;img class=&#39;</span><span class="nx">emoji</span><span class="s1">&#39; title=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; alt=&#39;</span><span class="o">:</span><span class="nx">heart</span><span class="o">:</span><span class="s1">&#39; src=&#39;</span><span class="nx">https</span><span class="o">:</span><span class="c1">//assets.github.com/images/icons/emoji/unicode/2764.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&#39;,</span>
+<span class="p">}</span>
+<span class="kr">const</span> <span class="nx">CRON_PATTERN</span> <span class="o">=</span> <span class="s1">&#39;00 00 12 * * 1-5&#39;</span>
+<span class="kr">const</span> <span class="nx">TIME_ZONE</span> <span class="o">=</span> <span class="s1">&#39;Europe/Berlin&#39;</span>
+
+<span class="kd">let</span> <span class="nx">previousCount</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">TOKEN</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;BOT_API_TOKEN not specified&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">bot</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SlackBot</span><span class="p">({</span>
+  <span class="nx">token</span><span class="o">:</span> <span class="nx">TOKEN</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span> <span class="nx">BOT_NAME</span><span class="p">,</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">task</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;--- TASK STARTED ---&#39;</span><span class="p">)</span>
+  <span class="nx">fetchCount</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span>
+        <span class="nx">CHANNEL</span><span class="p">,</span>
+        <span class="nx">getMessage</span><span class="p">(</span><span class="nx">previousCount</span><span class="p">,</span> <span class="nx">count</span><span class="p">),</span>
+        <span class="nx">PARAMS</span>
+      <span class="p">)</span>
+      <span class="nx">previousCount</span> <span class="o">=</span> <span class="nx">count</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessageToChannel</span><span class="p">(</span>
+        <span class="nx">CHANNEL</span><span class="p">,</span>
+        <span class="s1">&#39;Houston, we have a problem with customers tracker!&#39;</span><span class="p">,</span>
+        <span class="nx">PARAMS</span>
+      <span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">onCronError</span> <span class="o">=</span> <span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Cron job stopped&#39;</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">onDirectMessage</span> <span class="o">=</span> <span class="nx">channel</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">fetchCount</span><span class="p">()</span>
+    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">count</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessage</span><span class="p">(</span>
+        <span class="nx">channel</span><span class="p">,</span>
+        <span class="s2">&quot;Oh,geez! You&#39;re so impatient! We have &quot;</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">+</span> <span class="s2">&quot; customers*. &lt;img class=&#39;emoji&#39; title=&#39;:angry:&#39; alt=&#39;:angry:&#39; src=&#39;https://assets.github.com/images/icons/emoji/unicode/1f620.png&#39; height=&#39;20&#39; width=&#39;20&#39; align=&#39;absmiddle&#39; /&gt;&quot;</span><span class="p">,</span>
+        <span class="nx">PARAMS</span>
+      <span class="p">)</span>
+    <span class="p">})</span>
+    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">bot</span><span class="p">.</span><span class="nx">postMessage</span><span class="p">(</span>
+        <span class="nx">channel</span><span class="p">,</span>
+        <span class="s2">&quot;Something is not working properly. I couldn&#39;t get a customers number.&quot;</span><span class="p">,</span>
+        <span class="nx">PARAMS</span>
+      <span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;--- BOT STARTED ---&#39;</span><span class="p">)</span>
+  <span class="k">new</span> <span class="nx">CronJob</span><span class="p">(</span><span class="nx">CRON_PATTERN</span><span class="p">,</span> <span class="nx">task</span><span class="p">,</span> <span class="nx">onCronError</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">TIME_ZONE</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="nx">bot</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;message&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">bot_id</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">bot</span><span class="p">.</span><span class="nx">openIm</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">user</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">im</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">im</span><span class="p">.</span><span class="nx">channel</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">channel</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">onDirectMessage</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">channel</span><span class="p">)</span>
+      <span class="p">}</span>
+    <span class="p">})</span>
+  <span class="p">}</span>
+<span class="p">})</span></code></pre></div>
+
+<p>In <strong>messages.js</strong> I’ve added two prototype methods to the <code>Array</code> and <code>String</code>:</p>
+
+<ul>
+  <li>
+    <p><code>random()</code> for convenient random picking the values from the array</p>
+  </li>
+  <li>
+    <p><code>format()</code> for easy value injection into placeholders specified in the string</p>
+  </li>
+</ul>
+
+<p>The <code>messages</code> array serves as a structure to keep our rules for picking up the message from the appropriate array according to the <code>prev</code> and <code>next</code> customers number value.</p>
+
+<p>Then our <code>getMessage()</code> method randomly picks the string from the array, injects the current customers number and returns it.</p>
+
+<p>In <strong>app.js</strong> we’ve added <code>previousCount</code> variable to keep the last number from our API for comparison purposes.</p>
+
+<p>That’d be all! Thanks for reading. I hope you liked it. </p>
+
+<p>Until next time! </p>
+
+<hr />
+
+<p>The source code is available at <a href="https://github.com/lukaleli/slackbot">https://github.com/lukaleli/slackbot</a></p>
+
+
+      </section>
+      <footer class="post-footer">
+        <section class="share">
+           
+          <a class="icon-twitter" href="http://twitter.com/share?text=TUTORIAL%3A+Create+your+own+Slackbot+for+fun+and+profit&amp;url=http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit"
+            onclick="window.open(this.href, 'twitter-share', 'width=550,height=255');return false;">
+                <i class="fa fa-twitter"></i><span class="hidden">twitter</span>
+                </a>   
+          <a class="icon-facebook" href="https://www.facebook.com/sharer.php?t=TUTORIAL%3A+Create+your+own+Slackbot+for+fun+and+profit&amp;u=http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit"
+            onclick="window.open(this.href, 'facebook-share', 'width=550,height=255');return false;">
+                <i class="fa fa-facebook"></i><span class="hidden">facebook</span>
+                </a>    
+        </section>
+      </footer>
+      <div class="bottom-teaser cf">
+        <div class="isLeft">
+          <h5 class="index-headline featured"><span>Written by</span></h5>
+          <section class="author">
+            <div class="author-image" style="background-image: url(/assets/images/author.jpg)">Blog Logo</div>
+            <h4>Lukasz Lelinski</h4>
+            <p class="bio"></p>
+            <hr>
+            <p class="published">Published
+              <time datetime=" 2017-05-29 16:34 ">29 May 2017</time>
+            </p>
+          </section>
+        </div>
+        
+        <div class="isRight">
+          <h5 class="index-headline featured"><span>Supported by</span></h5>
+          <footer class="site-footer">
+            <section class="poweredby">Proudly published with <a href="http://jekyllrb.com"> Jekyll & GitHub Pages</a></section>
+            <a class="subscribe" href=" /feed.xml "> <span class="tooltip"> <i class="fa fa-rss"></i> You should subscribe to my feed.</span></a>
+            <div class="inner">
+              <section class="copyright">All content copyright <a href="/">Lukasz Lelinski</a> &copy; 2017<br>All
+                rights reserved.</section>
+            </div>
+          </footer>
+        </div>
+      </div>
+      
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'twitter-584190719'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function () {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+      
+    </article>
+  </main>
+  <div class="bottom-closer">
+    <div class="background-closer-image"  style="background-image: url(/assets/images/blog-cover.jpg)"
+      >
+      Image
+    </div>
+    <div class="outer"></div>
+    <div class="inner">
+      <h1 class="blog-title">PROGRAMMER'S BY-PRODUCTS</h1>
+      <h2 class="blog-description">Mostly on programming.
+</h2>
+      <a href=/ class="btn">Back to Overview</a>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/assets/js/index.js"></script>
+<script type="text/javascript" src="/assets/js/readingTime.min.js"></script>
+<script>
+(function ($) {
+  "use strict";
+  $(document).ready(function(){
+
+    var $window = $(window),
+    $image = $('.post-image-image, .teaserimage-image');
+    
+      $window.on('scroll', function() {
+        var top = $window.scrollTop();
+
+        if (top < 0 || top > 1500) { return; }
+        $image
+          .css('transform', 'translate3d(0px, '+top/3+'px, 0px)')
+          .css('opacity', 1-Math.max(top/700, 0));
+      });
+      $window.trigger('scroll');
+
+      var height = $('.article-image').height();
+      $('.post-content').css('padding-top', height + 'px');
+
+      $('a[href*=#]:not([href=#])').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'')
+         && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({ scrollTop: target.offset().top }, 500);
+            return false;
+          }
+        }
+      });
+
+  });
+}(jQuery));
+</script>
+
+
+</body>
+
+</html>
