@@ -6,8 +6,8 @@
 </description>
     <link>http://programmersbyproducts.com/</link>
     <atom:link href="http://programmersbyproducts.com/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 28 Aug 2017 19:45:30 +0200</pubDate>
-    <lastBuildDate>Mon, 28 Aug 2017 19:45:30 +0200</lastBuildDate>
+    <pubDate>Mon, 28 Aug 2017 19:50:05 +0200</pubDate>
+    <lastBuildDate>Mon, 28 Aug 2017 19:50:05 +0200</lastBuildDate>
     <generator>Jekyll v2.4.0</generator>
     
       <item>
@@ -611,9 +611,8 @@ X-Powered-By: PHP/5.4.45-0+deb7u8
 
 </description>
         <pubDate>Mon, 29 May 2017 16:34:25 +0200</pubDate>
-        <link>http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html</link>
-        <guid isPermaLink="true">http://programmersbyproducts.com/slack/slackbot/javascript/nodejs/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html</guid>
-        
+        <link>http://programmersbyproducts.com/programming/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html</link>
+        <guid isPermaLink="true">http://programmersbyproducts.com/programming/2017/05/29/tutorial-create-your-own-slackbot-for-fun-and-profit.html</guid>
         
         <category>slack</category>
         
@@ -622,6 +621,9 @@ X-Powered-By: PHP/5.4.45-0+deb7u8
         <category>javascript</category>
         
         <category>nodejs</category>
+        
+        
+        <category>programming</category>
         
       </item>
     
@@ -837,15 +839,17 @@ Now let’s use our previous component and apply our &lt;code&gt;withCallback&lt
 
 </description>
         <pubDate>Fri, 26 May 2017 16:34:25 +0200</pubDate>
-        <link>http://programmersbyproducts.com/redux/react/javascript/2017/05/26/redux-state-transitions-handled-easily.html</link>
-        <guid isPermaLink="true">http://programmersbyproducts.com/redux/react/javascript/2017/05/26/redux-state-transitions-handled-easily.html</guid>
-        
+        <link>http://programmersbyproducts.com/programming/2017/05/26/redux-state-transitions-handled-easily.html</link>
+        <guid isPermaLink="true">http://programmersbyproducts.com/programming/2017/05/26/redux-state-transitions-handled-easily.html</guid>
         
         <category>redux</category>
         
         <category>react</category>
         
         <category>javascript</category>
+        
+        
+        <category>programming</category>
         
       </item>
     

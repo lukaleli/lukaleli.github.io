@@ -2,7 +2,8 @@
 layout: post
 title:  "TUTORIAL: Create your own Slackbot for fun and profit"
 date:   2017-05-29 14:34:25
-categories: slack slackbot javascript nodejs
+categories: programming
+tags: slack slackbot javascript nodejs
 image: /assets/article_images/2017-05-29-slackbot/slackbot-cover-dark.jpg
 ---
 

@@ -2,7 +2,8 @@
 layout: post
 title:  "Redux state transitions handled easily"
 date:   2017-05-26 14:34:25
-categories: redux react javascript
+categories: programming
+tags: redux react javascript
 image: /assets/article_images/2017-05-26-redux/cover.jpg
 ---
 So you've started to write your first React application. After some time it turned out that you need to share data between different components. So you add an opinionated Redux store to manage your application's state. Then, at some point, you need to connect your app to the backend API to fetch and update some data. So you add `redux-saga` or `redux-thunk` to manage all the side effects of your redux actions. Then you add some additional flags in your chunks of data in the Redux store to reflect different states of your app that usually are dispatched as a side effects, e.g. `isUploading` or `isFetching`. All that to show some fancy loaders to the users when async operation is done in the background. But tracking these changes from, say, `isUploading: true` to `isUploading: false` and vice-versa is always a tedious task. Especially when you want to delay UI response to these changes (e.g. show some message for specified time and then hide it). And code that is produced in effect is usually hard to read. 
